@@ -69,6 +69,8 @@ def verify_face():
         face_feather.append(np.asarray(temp[0:128]))
         user_label.append(''.join(temp[128:129]))
 
+
+
     if request.method == 'POST':
         base64_str = str(request.form['data'])
         base64_str = base64_str.replace(' ', '+')
