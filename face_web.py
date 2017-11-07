@@ -45,9 +45,9 @@ def add_faceset():
         face_img.write(imgData)
         face_img.close()
 
-        img1 = cv2.imread(img_path)
+        img1 = cv2.imdecode(np.fromfile(img_path, dtype=np.uint8), flags=1)
         img1 = cv2.resize(img1, (int(img1.shape[1] * 0.1), int(img1.shape[0] * 0.1)))
-        cv2.imwrite(img_path, img1)
+        cv2.imencode('.jpg', img1)[1].tofile(img_path)
 
         img_temp = Image.open(img_path)
 
@@ -79,7 +79,7 @@ def verify_face():
     user_label = []
     result_mes = {'success': 1, 'data': {}, 'errorCode': 300, 'errorMsg': ''}
     result_verify = {'status': False, 'username': ''}
-    csv_file = pd.read_csv('../result/faceCSV/face1.csv')
+    csv_file = pd.read_csv('../result/faceCSV/face1.csv', encoding='gb2312')
     row = csv_file.shape[0]
 
     for i in range(row):
@@ -133,7 +133,7 @@ def query_user():
     tem_data = request.get_json(force=True)
     username = str(tem_data['id'])
     username = parse.unquote(username)
-    csv_file = pd.read_csv('../result/faceCSV/face1.csv')
+    csv_file = pd.read_csv('../result/faceCSV/face1.csv', encoding='gb2312')
     row = csv_file.shape[0]
     for i in range(row):
         temp = list(csv_file.loc[i])
