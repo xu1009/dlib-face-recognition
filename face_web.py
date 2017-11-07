@@ -68,7 +68,8 @@ def add_faceset():
         write.writerow(face_encoding)
         f.close()
         result_add['status'] = 1
-        return json.dumps(result_add)
+        result_mes['data'] = result_add
+        return json.dumps(result_mes)
 
 
 @app.route('/verifyFace.do', methods=['GET', 'POST'])
@@ -116,9 +117,8 @@ def verify_face():
         face_enconding = face_recognition.face_encodings(image)[0]
         face_distance = face_recognition.face_distance(face_feather, face_enconding)
         face_distance = list(face_distance)
-
         print(user_label[face_distance.index(min(face_distance))], min(face_distance))
-        if min(face_distance) < 0.5:
+        if min(face_distance) < 0.4:
             result_verify['status'] = True
             result_verify['username'] = user_label[face_distance.index(min(face_distance))]
         result_mes['data'] = result_verify
@@ -130,7 +130,6 @@ def query_user():
     user_label = []
     result_mes = {'success': 1, 'data': {}, 'errorCode': 300, 'errorMsg': ''}
     query_res = {'status': True}
-
     tem_data = request.get_json(force=True)
     username = str(tem_data['id'])
     username = parse.unquote(username)
@@ -140,9 +139,9 @@ def query_user():
         temp = list(csv_file.loc[i])
         user_label.append(''.join(temp[128:129]))
     if username in user_label:
-        query_res['status'] = False
-    else:
         query_res['status'] = True
+    else:
+        query_res['status'] = False
     result_mes['data'] = query_res
     return json.dumps(result_mes)
 
