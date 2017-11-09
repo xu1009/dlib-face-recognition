@@ -8,9 +8,8 @@ import json
 import pandas as pd
 import numpy as np
 from PIL import Image
-
+from scipy.spatial import distance as dist
 from urllib import parse
-
 
 FACE_SET_PATH = 'E:/faceimg/faceset/'
 FACE_VERIFY_PATH = 'E:/faceimg/faceverify/'
@@ -144,6 +143,56 @@ def query_user():
         query_res['status'] = False
     result_mes['data'] = query_res
     return json.dumps(result_mes)
+
+
+@app.route('/detectBlinkEye.do', methods=['GET', 'POST'])
+def detect_blink_eye():
+    if request.method == 'POST':
+        result_mes = {'success': 1, 'data': {}, 'errorCode': 300, 'errorMsg': ''}
+        tem_data = request.get_json(force=True)
+        base64_str = str(tem_data['data'])
+        base64_str = parse.unquote(base64_str)
+
+        imgData = base64.b64decode(base64_str)
+
+        img_path = FACE_VERIFY_PATH + 'detect' + str(random.randint(0, 500)) + '.jpg'
+        face_img = open(img_path, 'wb')
+        face_img.write(imgData)
+        face_img.close()
+
+        img1 = cv2.imread(img_path)
+        img1 = cv2.resize(img1, (int(img1.shape[1] * 0.1), int(img1.shape[0] * 0.1)))
+        cv2.imwrite(img_path, img1)
+        img_temp = Image.open(img_path)
+        if img_temp.width > img_temp.height:
+            im_rotate = img_temp.rotate(270, expand=True)
+            im_rotate.save(img_path)
+        image = face_recognition.load_image_file(img_path)
+        face_landmarks_list = face_recognition.face_landmarks(image)
+        if len(face_landmarks_list) == 0:
+            return json.dumps(result_mes)
+        face_landmarks = face_landmarks_list[0]
+        left_eye = face_landmarks['left_eye']
+        right_eye = face_landmarks['right_eye']
+        ear = (eye_aspect_ratio(left_eye) + eye_aspect_ratio(right_eye))
+        print(ear)
+        return json.dumps(result_mes)
+
+@app.route('/tst.do', methods=['GET', 'POST'])
+def for_tst():
+    result_mes = {'success': 1, 'data': {}, 'errorCode': 300, 'errorMsg': ''}
+    return json.dumps(result_mes)
+
+def eye_aspect_ratio(eye):
+    A = dist.euclidean(eye[1], eye[5])
+    B = dist.euclidean(eye[2], eye[4])
+
+    C = dist.euclidean(eye[0], eye[3])
+
+    ear = (A + B) / (2.0 * C)
+
+    return ear
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8585, debug=True)
